@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  namespace: kafka
+  name: zookeeper
+  labels:
+    component: messaging
+    app: zookeeper
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: messaging
+      app: zookeeper
+  serviceName: zookeeper
+  template:
+    metadata:
+      name: zookeeper
+      labels:
+        component: messaging
+        app: zookeeper
+    spec:
+      serviceAccountName: zookeeper
+      containers:
+        - name: zookeeper
+          image: confluentinc/cp-zookeeper:7.3.3
+          imagePullPolicy: Never
+          env:
+            - name: ZOOKEEPER_CLIENT_PORT
+              value: "2181"
+            - name: ZOOKEEPER_TICK_TIME
+              value: "2000"
+          ports:
+            - containerPort: 2181

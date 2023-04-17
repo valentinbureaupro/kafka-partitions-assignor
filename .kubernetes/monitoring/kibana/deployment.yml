@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: monitoring
+  name: kibana
+  labels:
+    component: monitoring
+    app: kibana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: monitoring
+      app: kibana
+  template:
+    metadata:
+      name: kibana
+      labels:
+        component: monitoring
+        app: kibana
+    spec:
+      serviceAccountName: kibana
+      containers:
+        - name: kibana
+          image: docker.elastic.co/kibana/kibana:8.7.0
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 5601

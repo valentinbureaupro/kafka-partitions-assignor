@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: kafka-partitions-assignor
+  name: kafka-partitions-assignor
+  labels:
+    component: application
+    app: kafka-partitions-assignor
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      component: application
+      app: kafka-partitions-assignor
+  template:
+    metadata:
+      name: kafka-partitions-assignor
+      labels:
+        component: application
+        app: kafka-partitions-assignor
+    spec:
+      serviceAccountName: kafka-partitions-assignor
+      containers:
+        - name: kafka-partitions-assignor
+          image: valentinbureaupro/kafka-partitions-assignor
+          imagePullPolicy: Never
+          env:
+            - name: KAFKA_HOSTNAME
+              value: "kafka.kafka.svc.cluster.local:9092"
+            - name: KAFKA_LISTENER_CONCURRENCY
+              value: "1"
+            - name: KAFKA_PARTITION_ASSIGNOR
+              value: "org.apache.kafka.clients.consumer.RangeAssignor"
+          ports:
+            - containerPort: 8080
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      terminationGracePeriodSeconds: 30

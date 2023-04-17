@@ -1,0 +1,30 @@
+server:
+  port: 8080
+  shutdown: graceful
+
+spring:
+  application:
+    name: kafka-partitions-assignor
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+
+  kafka:
+    bootstrap-servers: ${KAFKA_HOSTNAME:localhost:29092}
+    listener:
+      concurrency: ${KAFKA_LISTENER_CONCURRENCY:1}
+    consumer:
+      group-id: kafka-partitions-assignor
+      properties:
+        partition.assignment.strategy: ${KAFKA_PARTITION_ASSIGNOR:org.apache.kafka.clients.consumer.RangeAssignor}
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+kafka-partitions-assignor:
+  consumer:
+    kafka:
+      user:
+        topic-name: user.cdc

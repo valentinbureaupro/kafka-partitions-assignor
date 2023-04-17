@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kafka-partitions-assignor
+  labels:
+    component: application
+    app: kafka-partitions-assignor

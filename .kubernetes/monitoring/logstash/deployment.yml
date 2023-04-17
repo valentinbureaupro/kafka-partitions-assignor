@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: monitoring
+  name: logstash
+  labels:
+    component: monitoring
+    app: logstash
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: monitoring
+      app: logstash
+  template:
+    metadata:
+      name: logstash
+      labels:
+        component: monitoring
+        app: logstash
+    spec:
+      serviceAccountName: logstash
+      containers:
+        - name: logstash
+          image: docker.elastic.co/logstash/logstash:8.7.0
+          imagePullPolicy: Never
+          env:
+            - name: ELASTICSEARCH_HOSTNAME
+              value: "elasticsearch:9200"
+          ports:
+            - containerPort: 5044
+          volumeMounts:
+            - name: configuration
+              mountPath: /usr/share/logstash/pipeline/logstash.conf
+              readOnly: true
+              subPath: logstash.conf
+      volumes:
+        - name: configuration
+          configMap:
+            defaultMode: 0644
+            name: logstash
