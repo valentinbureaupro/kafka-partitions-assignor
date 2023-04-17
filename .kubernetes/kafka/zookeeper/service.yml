@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: kafka
+  name: zookeeper
+  labels:
+    component: messaging
+    app: zookeeper
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - protocol: TCP
+      port: 2181
+      targetPort: 2181
+  selector:
+    component: messaging
+    app: zookeeper

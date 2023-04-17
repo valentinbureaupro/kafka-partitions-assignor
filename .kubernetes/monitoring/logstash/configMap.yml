@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: monitoring
+  name: logstash
+  labels:
+    component: monitoring
+    app: logstash
+data:
+  logstash.conf: |-
+    input {
+      beats {
+        port => 5044
+      }
+    }
+  
+    output {
+      elasticsearch {
+        hosts => "${ELASTICSEARCH_HOSTNAME}"
+      }
+    }

@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: monitoring
+  name: elasticsearch
+  labels:
+    component: monitoring
+    app: elasticsearch
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: monitoring
+      app: elasticsearch
+  template:
+    metadata:
+      name: elasticsearch
+      labels:
+        component: monitoring
+        app: elasticsearch
+    spec:
+      serviceAccountName: elasticsearch
+      containers:
+        - name: elasticsearch
+          image: docker.elastic.co/elasticsearch/elasticsearch:8.7.0
+          imagePullPolicy: Never
+          env:
+            - name: xpack.security.enabled
+              value: "false"
+            - name: discovery.type
+              value: "single-node"
+            - name: ES_JAVA_OPTS
+              value: "-Xmx256m"
+          ports:
+            - containerPort: 9200

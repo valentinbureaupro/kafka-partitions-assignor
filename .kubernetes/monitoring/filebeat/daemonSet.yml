@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  namespace: monitoring
+  name: filebeat
+  labels:
+    component: monitoring
+    app: filebeat
+spec:
+  selector:
+    matchLabels:
+      component: monitoring
+      app: filebeat
+  template:
+    metadata:
+      name: filebeat
+      labels:
+        component: monitoring
+        app: filebeat
+    spec:
+      serviceAccountName: filebeat
+      containers:
+        - name: filebeat
+          image: docker.elastic.co/beats/filebeat:8.7.0
+          imagePullPolicy: Never
+          env:
+            - name: LOGSTASH_HOSTNAME
+              value: "logstash:5044"
+            - name: KUBERNETES_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          securityContext:
+            runAsUser: 0
+          volumeMounts:
+            - name: configuration
+              mountPath: /usr/share/filebeat/filebeat.yml
+              readOnly: true
+              subPath: filebeat.yml
+            - name: docker
+              mountPath: /var/lib/docker/containers
+              readOnly: true
+            #- name: data
+            #  mountPath: /usr/share/filebeat/data
+      volumes:
+        - name: configuration
+          configMap:
+            defaultMode: 0640
+            name: filebeat
+        - name: docker
+          hostPath:
+            path: /var/lib/docker/containers
+        #- name: data
+        #  hostPath:
+        #    path: /var/lib/filebeat-data
+        #    type: DirectoryOrCreate

@@ -1,0 +1,29 @@
+server:
+  shutdown: graceful
+
+spring:
+  application:
+    name: kafka-partitions-assignor
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+
+  kafka:
+    bootstrap-servers: ${KAFKA_HOSTNAME:localhost:29092}
+    consumer:
+      group-id: kafka-partitions-assignor
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+logging:
+  file:
+    name: /tmp/logs/${spring.application.name}.log
+
+kafka-partitions-assignor:
+  consumer:
+    kafka:
+      user:
+        topic-name: user.cdc
