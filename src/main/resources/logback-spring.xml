@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml" />
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml" />
+
+    <appender name="JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <property name="JSON_CONSOLE_LOG_PATTERN" value="{&quot;@timestamp&quot;:&quot;%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX}&quot;,&quot;level&quot;:&quot;%level&quot;,&quot;message&quot;:&quot;%replace(%replace(%replace(%message){'[&quot;]+', '\\&quot;'}){'[\t]+', '\\t'}){'[\r\n]+', '\\n'}&quot;,&quot;service&quot;:&quot;kafka-partitions-assignor&quot;,&quot;thread&quot;:&quot;%thread&quot;,&quot;logger&quot;:&quot;%logger&quot;,&quot;exception&quot;:&quot;%replace(%replace(%replace(%exception{short}){'[&quot;]+', '\\&quot;'}){'[\t]+', '\\t'}){'[\r\n]+', '\\n'}&quot;,&quot;stacktrace&quot;:&quot;%replace(%replace(%replace(%exception){'[&quot;]+', '\\&quot;'}){'[\t]+', '\\t'}){'[\r\n]+', '\\n'}&quot;}\n" />
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>${CONSOLE_LOG_THRESHOLD}</level>
+        </filter>
+        <encoder>
+            <pattern>${JSON_CONSOLE_LOG_PATTERN}</pattern>
+            <charset>${CONSOLE_LOG_CHARSET}</charset>
+        </encoder>
+    </appender>
+
+    <springProfile name="container">
+        <root level="INFO">
+            <appender-ref ref="JSON_CONSOLE" />
+        </root>
+    </springProfile>
+
+    <springProfile name="!container">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE" />
+        </root>
+    </springProfile>
+
+    <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
+</configuration>

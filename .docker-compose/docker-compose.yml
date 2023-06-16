@@ -1,0 +1,115 @@
+version: '3'
+name: kafka-partitions-assignor
+
+networks:
+  valentinbureaupro-network:
+    name: valentinbureaupro-network
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.3.3
+    container_name: valentinbureaupro-zookeeper
+    networks:
+      - valentinbureaupro-network
+    hostname: valentinbureaupro-zookeeper
+    expose:
+      - 2181
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:7.3.3
+    container_name: valentinbureaupro-kafka
+    depends_on:
+      - zookeeper
+    networks:
+      - valentinbureaupro-network
+    hostname: valentinbureaupro-kafka
+    expose:
+      - 9092
+    ports:
+      - 29092:29092
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_NUM_PARTITIONS: 5
+      KAFKA_ZOOKEEPER_CONNECT: valentinbureaupro-zookeeper:2181
+      KAFKA_LISTENERS: INSIDE://0.0.0.0:9092,OUTSIDE://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://valentinbureaupro-kafka:9092,OUTSIDE://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+      KAFKA_HEAP_OPTS: "-Xmx256m"
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.7.0
+    container_name: valentinbureaupro-elasticsearch
+    networks:
+      - valentinbureaupro-network
+    hostname: valentinbureaupro-elasticsearch
+    expose:
+      - 9200
+    environment:
+      xpack.security.enabled: false
+      discovery.type: single-node
+      ES_JAVA_OPTS: "-Xmx256m"
+    #volumes:
+    #  - ../.tmp/.elasticsearch/data:/usr/share/elasticsearch/data:rw
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.7.0
+    container_name: valentinbureaupro-logstash
+    depends_on:
+      - elasticsearch
+    networks:
+      - valentinbureaupro-network
+    hostname: valentinbureaupro-logstash
+    expose:
+      - 5044
+    environment:
+      ELASTICSEARCH_HOSTNAME: valentinbureaupro-elasticsearch:9200
+    volumes:
+      - ../.logstash/pipeline:/usr/share/logstash/pipeline:ro
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.7.0
+    container_name: valentinbureaupro-filebeat
+    depends_on:
+      - logstash
+    networks:
+      - valentinbureaupro-network
+    hostname: valentinbureaupro-filebeat
+    environment:
+      LOGSTASH_HOSTNAME: valentinbureaupro-logstash:5044
+    volumes:
+      - ../.filebeat/filebeat.docker.yml:/usr/share/filebeat/filebeat.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      #- ../.tmp/.filebeat/data:/usr/share/filebeat/data:rw
+    user: root
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.7.0
+    container_name: valentinbureaupro-kibana
+    depends_on:
+      - elasticsearch
+    networks:
+      - valentinbureaupro-network
+    hostname: valentinbureaupro-kibana
+    expose:
+      - 5601
+    ports:
+      - 25601:5601
+
+  kafka-partitions-assignor:
+    image: valentinbureaupro/kafka-partitions-assignor
+    container_name: valentinbureaupro-kafka-partitions-assignor
+    depends_on:
+      - kafka
+    networks:
+      - valentinbureaupro-network
+    hostname: valentinbureaupro-kafka-partitions-assignor
+    profiles:
+      - donotstart
+    environment:
+      KAFKA_HOSTNAME: valentinbureaupro-kafka:9092
